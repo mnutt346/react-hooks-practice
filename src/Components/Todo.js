@@ -4,6 +4,7 @@ import axios from "axios";
 const Todo = props => {
   const [todoName, setTodoName] = useState("");
   const [todoList, setTodoList] = useState([]);
+  const [submittedTodo, setSubmittedTodo] = useState(null);
 
   useEffect(() => {
     axios
@@ -24,6 +25,12 @@ const Todo = props => {
     return () => document.removeEventListener("mousemove", mouseMoveHandler);
   }, []);
 
+  useEffect(() => {
+    if (submittedTodo) {
+      setTodoList(todoList.concat(submittedTodo));
+    }
+  }, [submittedTodo]);
+
   const mouseMoveHandler = e => {
     console.log(e.clientX, e.clientY);
   };
@@ -39,7 +46,7 @@ const Todo = props => {
       })
       .then(res => {
         const todoItem = { id: res.data.name, name: todoName };
-        setTodoList(todoList.concat(todoItem));
+        setSubmittedTodo(todoItem);
       })
       .catch(err => console.log(err));
   };
