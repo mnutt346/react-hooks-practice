@@ -1,10 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import axios from "axios";
 
 const Todo = props => {
   const [todoName, setTodoName] = useState("");
-  const [todoList, setTodoList] = useState([]);
+  //   const [todoList, setTodoList] = useState([]);
   const [submittedTodo, setSubmittedTodo] = useState(null);
+
+  const todoListReducer = (state, action) => {
+    switch (action.type) {
+      case "ADD":
+        return state.concat(action.payload);
+      case "SET":
+        return action.payload;
+      case "REMOVE":
+        return state.filter(todo => todo.id !== action.payload);
+      default:
+        return state;
+    }
+  };
+
+  const [todoList, dispatch] = useReducer(todoListReducer, []);
 
   useEffect(() => {
     axios
@@ -16,7 +31,7 @@ const Todo = props => {
         for (let key in todoData) {
           todos.push({ id: key, name: todoData[key].todo });
         }
-        setTodoList(todos);
+        dispatch({ type: "SET", payload: todos });
       });
   }, []);
 
@@ -27,7 +42,7 @@ const Todo = props => {
 
   useEffect(() => {
     if (submittedTodo) {
-      setTodoList(todoList.concat(submittedTodo));
+      dispatch({ type: "ADD", payload: submittedTodo });
     }
   }, [submittedTodo]);
 
@@ -51,6 +66,13 @@ const Todo = props => {
       .catch(err => console.log(err));
   };
 
+  const todoRemoveHandler = id => {
+    axios
+      .delete(`https://react-hooks-practice.firebaseio.com/todos/${id}.json`)
+      .then(res => dispatch({ type: "REMOVE", payload: id }))
+      .catch(err => console.log(err));
+  };
+
   return (
     <React.Fragment>
       <input
@@ -64,7 +86,9 @@ const Todo = props => {
       </button>
       <ul>
         {todoList.map(todo => (
-          <li key={todo.id}>{todo.name}</li>
+          <li key={todo.id} onClick={todoRemoveHandler.bind(this, todo.id)}>
+            {todo.name}
+          </li>
         ))}
       </ul>
     </React.Fragment>
